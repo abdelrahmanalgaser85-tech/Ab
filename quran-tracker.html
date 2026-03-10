@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>متابعة حفظ القرآن</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Tajawal:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0D0F0A;
+  --bg2: #131508;
+  --bg3: #1A1C0F;
+  --bg4: #22240F;
+  --green: #4A7C3F;
+  --green-light: #6AAF5E;
+  --green-glow: rgba(74,124,63,0.3);
+  --gold: #C9A84C;
+  --gold-dim: rgba(201,168,76,0.15);
+  --text: #E8E4D0;
+  --text-dim: #7A7860;
+  --border: rgba(74,124,63,0.2);
+  --border-gold: rgba(201,168,76,0.2);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Tajawal', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(74,124,63,0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 30% at 80% 80%, rgba(201,168,76,0.04) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* HEADER */
+header {
+  text-align: center;
+  padding: 32px 16px 24px;
+}
+
+.bismillah {
+  font-family: 'Amiri', serif;
+  font-size: 22px;
+  color: var(--gold);
+  margin-bottom: 12px;
+  opacity: 0.9;
+}
+
+header h1 {
+  font-family: 'Amiri', serif;
+  font-size: 28px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-weight: 300;
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+  margin: 20px 0;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 6px;
+  text-align: center;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+  transition: all 0.2s;
+}
+
+.tab.active {
+  background: var(--green);
+  color: #fff;
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* CARDS */
+.card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--green-light);
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+/* SUMMARY ROW */
+.summary-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.stat-box {
+  flex: 1;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.stat-num {
+  font-family: 'Amiri', serif;
+  font-size: 28px;
+  color: var(--green-light);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+/* PROGRESS BAR */
+.progress-wrap {
+  background: var(--bg4);
+  border-radius: 6px;
+  height: 8px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), var(--green-light));
+  border-radius: 6px;
+  transition: width 0.5s ease;
+}
+
+/* JUZZ GRID */
+.juzz-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.juzz-cell {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  position: relative;
+}
+
+.juzz-cell.memorized {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green-light);
+}
+
+.juzz-cell.in-progress {
+  background: rgba(201,168,76,0.2);
+  color: var(--gold);
+  border-color: rgba(201,168,76,0.4);
+}
+
+.juzz-cell.not-started {
+  background: var(--bg4);
+  color: var(--text-dim);
+  border-color: var(--border);
+}
+
+.juzz-cell:hover { transform: scale(1.05); }
+
+/* DAILY LOG */
+.day-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--bg4);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.day-date {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  flex: 0 0 80px;
+  text-align: center;
+}
+
+.day-info {
+  flex: 1;
+  text-align: right;
+}
+
+.day-surah {
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.day-pages {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.day-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.badge-hifz { background: rgba(74,124,63,0.2); color: var(--green-light); border: 1px solid rgba(74,124,63,0.3); }
+.badge-muraja { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+
+/* FORM */
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--green-light);
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.form-input, .form-select {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-family: 'Tajawal', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus, .form-select:focus {
+  border-color: rgba(74,124,63,0.6);
+}
+
+.form-input::placeholder { color: var(--text-dim); }
+
+.form-row { display: flex; gap: 10px; }
+.form-row .form-group { flex: 1; }
+
+.btn-green {
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 13px 24px;
+  font-family: 'Tajawal', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.btn-green:hover { background: var(--green-light); }
+
+/* FRIDAY ALERT */
+.friday-banner {
+  background: linear-gradient(135deg, rgba(201,168,76,0.1), rgba(201,168,76,0.05));
+  border: 1px solid var(--border-gold);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  text-align: center;
+  display: none;
+}
+
+.friday-banner.show { display: block; }
+
+.friday-icon { font-size: 24px; margin-bottom: 6px; }
+.friday-text { font-size: 14px; color: var(--gold); font-weight: 700; }
+.friday-sub { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+
+/* WEEK CALENDAR */
+.week-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.week-day {
+  flex: 1;
+  background: var(--bg4);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 4px;
+  text-align: center;
+  font-size: 10px;
+}
+
+.week-day.done { background: rgba(74,124,63,0.2); border-color: rgba(74,124,63,0.4); }
+.week-day.today { border-color: var(--green-light); }
+.week-day.friday { background: rgba(201,168,76,0.1); border-color: rgba(201,168,76,0.3); }
+
+.week-day-name {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.week-day-icon { font-size: 14px; }
+
+/* SURAHS LIST */
+.surah-option { direction: rtl; }
+
+.empty-state {
+  text-align: center;
+  padding: 30px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.divider-line {
+  width: 40px;
+  height: 1px;
+  background: var(--green);
+  margin: 0 auto 20px;
+  opacity: 0.5;
+}
+
+/* STREAK */
+.streak-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(74,124,63,0.1), transparent);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.streak-num {
+  font-family: 'Amiri', serif;
+  font-size: 42px;
+  color: var(--green-light);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.streak-info { flex: 1; text-align: right; }
+.streak-label { font-size: 14px; font-weight: 700; color: var(--text); }
+.streak-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+    <h1>متابعة حفظ القرآن</h1>
+    <p class="subtitle">عبدالرحمن — نظام الحفظ اليومي</p>
+    <div class="divider-line"></div>
+  </header>
+
+  <div id="fridayBanner" class="friday-banner">
+    <div class="friday-icon">🌙</div>
+    <div class="friday-text">يوم الجمعة — يوم المراجعة</div>
+    <div class="friday-sub">لا حفظ جديد اليوم · راجع ما حفظته</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('home')">🏠 الرئيسية</div>
+    <div class="tab" onclick="switchTab('log')">📝 تسجيل</div>
+    <div class="tab" onclick="switchTab('map')">🗺️ الخريطة</div>
+    <div class="tab" onclick="switchTab('history')">📜 السجل</div>
+  </div>
+
+  <!-- HOME TAB -->
+  <div class="tab-content active" id="tab-home">
+
+    <div class="streak-box">
+      <div class="streak-num" id="streakNum">0</div>
+      <div class="streak-info">
+        <div class="streak-label">يوم متتالي 🔥</div>
+        <div class="streak-sub" id="streakSub">سجّل جلستك اليوم للحفاظ على السلسلة</div>
+      </div>
+    </div>
+
+    <div class="summary-row">
+      <div class="stat-box">
+        <div class="stat-num" id="statJuzz">٢</div>
+        <div class="stat-label">جزء محفوظ</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statPages">0</div>
+        <div class="stat-label">صفحة هذا الأسبوع</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statSessions">0</div>
+        <div class="stat-label">جلسة هذا الشهر</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">▸ التقدم الكلي</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);margin-bottom:4px">
+        <span id="progressPct">6.7%</span>
+        <span id="progressText">2 من 30 جزء</span>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-fill" id="progressBar" style="width:6.7%"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">▸ هذا الأسبوع</div>
+      <div class="week-row" id="weekRow"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">▸ الموقع الحالي</div>
+      <div style="text-align:center;padding:8px 0">
+        <div style="font-family:'Amiri',serif;font-size:20px;color:var(--gold);margin-bottom:6px" id="currentSurah">سورة المجادلة</div>
+        <div style="font-size:12px;color:var(--text-dim)" id="currentJuzz">الجزء الثامن والعشرون (قد سمع) — جارٍ</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- LOG TAB -->
+  <div class="tab-content" id="tab-log">
+    <div class="card">
+      <div class="card-title">▸ تسجيل جلسة اليوم</div>
+
+      <div class="form-group">
+        <label class="form-label">نوع الجلسة</label>
+        <select class="form-select" id="sessionType">
+          <option value="hifz">حفظ جديد</option>
+          <option value="muraja">مراجعة</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">السورة</label>
+          <select class="form-select" id="sessionSurah">
+            <option value="البقرة">البقرة</option>
+            <option value="آل عمران">آل عمران</option>
+            <option value="النساء">النساء</option>
+            <option value="المائدة">المائدة</option>
+            <option value="الأنعام">الأنعام</option>
+            <option value="الأعراف">الأعراف</option>
+            <option value="الأنفال">الأنفال</option>
+            <option value="التوبة">التوبة</option>
+            <option value="يونس">يونس</option>
+            <option value="هود">هود</option>
+            <option value="يوسف">يوسف</option>
+            <option value="الرعد">الرعد</option>
+            <option value="إبراهيم">إبراهيم</option>
+            <option value="الحجر">الحجر</option>
+            <option value="النحل">النحل</option>
+            <option value="الإسراء">الإسراء</option>
+            <option value="الكهف">الكهف</option>
+            <option value="مريم">مريم</option>
+            <option value="طه">طه</option>
+            <option value="الأنبياء">الأنبياء</option>
+            <option value="الحج">الحج</option>
+            <option value="المؤمنون">المؤمنون</option>
+            <option value="النور">النور</option>
+            <option value="الفرقان">الفرقان</option>
+            <option value="الشعراء">الشعراء</option>
+            <option value="النمل">النمل</option>
+            <option value="القصص">القصص</option>
+            <option value="العنكبوت">العنكبوت</option>
+            <option value="الروم">الروم</option>
+            <option value="لقمان">لقمان</option>
+            <option value="السجدة">السجدة</option>
+            <option value="الأحزاب">الأحزاب</option>
+            <option value="سبأ">سبأ</option>
+            <option value="فاطر">فاطر</option>
+            <option value="يس">يس</option>
+            <option value="الصافات">الصافات</option>
+            <option value="ص">ص</option>
+            <option value="الزمر">الزمر</option>
+            <option value="غافر">غافر</option>
+            <option value="فصلت">فصلت</option>
+            <option value="الشورى">الشورى</option>
+            <option value="الزخرف">الزخرف</option>
+            <option value="الدخان">الدخان</option>
+            <option value="الجاثية">الجاثية</option>
+            <option value="الأحقاف">الأحقاف</option>
+            <option value="محمد">محمد</option>
+            <option value="الفتح">الفتح</option>
+            <option value="الحجرات">الحجرات</option>
+            <option value="ق">ق</option>
+            <option value="الذاريات">الذاريات</option>
+            <option value="الطور">الطور</option>
+            <option value="النجم">النجم</option>
+            <option value="القمر">القمر</option>
+            <option value="الرحمن">الرحمن</option>
+            <option value="الواقعة">الواقعة</option>
+            <option value="الحديد">الحديد</option>
+            <option value="المجادلة" selected>المجادلة</option>
+            <option value="الحشر">الحشر</option>
+            <option value="الممتحنة">الممتحنة</option>
+            <option value="الصف">الصف</option>
+            <option value="الجمعة">الجمعة</option>
+            <option value="المنافقون">المنافقون</option>
+            <option value="التغابن">التغابن</option>
+            <option value="الطلاق">الطلاق</option>
+            <option value="التحريم">التحريم</option>
+            <option value="الملك">الملك</option>
+            <option value="القلم">القلم</option>
+            <option value="الحاقة">الحاقة</option>
+            <option value="المعارج">المعارج</option>
+            <option value="نوح">نوح</option>
+            <option value="الجن">الجن</option>
+            <option value="المزمل">المزمل</option>
+            <option value="المدثر">المدثر</option>
+            <option value="القيامة">القيامة</option>
+            <option value="الإنسان">الإنسان</option>
+            <option value="المرسلات">المرسلات</option>
+            <option value="النبأ">النبأ</option>
+            <option value="النازعات">النازعات</option>
+            <option value="عبس">عبس</option>
+            <option value="التكوير">التكوير</option>
+            <option value="الانفطار">الانفطار</option>
+            <option value="المطففين">المطففين</option>
+            <option value="الانشقاق">الانشقاق</option>
+            <option value="البروج">البروج</option>
+            <option value="الطارق">الطارق</option>
+            <option value="الأعلى">الأعلى</option>
+            <option value="الغاشية">الغاشية</option>
+            <option value="الفجر">الفجر</option>
+            <option value="البلد">البلد</option>
+            <option value="الشمس">الشمس</option>
+            <option value="الليل">الليل</option>
+            <option value="الضحى">الضحى</option>
+            <option value="الشرح">الشرح</option>
+            <option value="التين">التين</option>
+            <option value="العلق">العلق</option>
+            <option value="القدر">القدر</option>
+            <option value="البينة">البينة</option>
+            <option value="الزلزلة">الزلزلة</option>
+            <option value="العاديات">العاديات</option>
+            <option value="القارعة">القارعة</option>
+            <option value="التكاثر">التكاثر</option>
+            <option value="العصر">العصر</option>
+            <option value="الهمزة">الهمزة</option>
+            <option value="الفيل">الفيل</option>
+            <option value="قريش">قريش</option>
+            <option value="الماعون">الماعون</option>
+            <option value="الكوثر">الكوثر</option>
+            <option value="الكافرون">الكافرون</option>
+            <option value="النصر">النصر</option>
+            <option value="المسد">المسد</option>
+            <option value="الإخلاص">الإخلاص</option>
+            <option value="الفلق">الفلق</option>
+            <option value="الناس">الناس</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">عدد الصفحات</label>
+          <input type="number" class="form-input" id="sessionPages" placeholder="1" min="0.5" max="20" step="0.5" value="1">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">ملاحظة (اختياري)</label>
+        <input type="text" class="form-input" id="sessionNote" placeholder="مثال: من الآية 1 إلى 10">
+      </div>
+
+      <button class="btn-green" onclick="logSession()">✓ تسجيل الجلسة</button>
+    </div>
+  </div>
+
+  <!-- MAP TAB -->
+  <div class="tab-content" id="tab-map">
+    <div class="card">
+      <div class="card-title">▸ خريطة الأجزاء الثلاثين</div>
+      <div style="display:flex;gap:16px;margin-bottom:12px;font-size:11px">
+        <span><span style="display:inline-block;width:12px;height:12px;background:var(--green);border-radius:3px;vertical-align:middle;margin-left:4px"></span>محفوظ</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:rgba(201,168,76,0.3);border-radius:3px;vertical-align:middle;margin-left:4px"></span>جارٍ</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:var(--bg4);border-radius:3px;vertical-align:middle;margin-left:4px"></span>لم يبدأ</span>
+      </div>
+      <div class="juzz-grid" id="juzzGrid"></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="card-title">▸ تحديث حالة جزء</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">الجزء</label>
+          <select class="form-select" id="juzzSelect"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">الحالة</label>
+          <select class="form-select" id="juzzStatus">
+            <option value="memorized">محفوظ ✓</option>
+            <option value="in-progress">جارٍ ◐</option>
+            <option value="not-started">لم يبدأ</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-green" onclick="updateJuzz()">تحديث</button>
+    </div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div class="tab-content" id="tab-history">
+    <div class="card">
+      <div class="card-title">▸ سجل الجلسات</div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============ DATA ============
+const JUZZ_NAMES = [
+  'الم','سيقول','تلك الرسل','لن تنالوا','والمحصنات',
+  'لا يحب الله','وإذا سمعوا','ولو أننا','قال الملأ','واعلموا',
+  'يعتذرون','وما من دابة','وما أبرئ','ربما','سبحان الذي',
+  'قال ألم','اقترب','قد أفلح','وقال الذين','أمن خلق',
+  'اتل ما أوحي','ومن يقنت','وما لي','فمن أظلم','إليه يرد',
+  'حم','قال فما خطبكم','قد سمع','تبارك','عم'
+];
+
+function loadData() {
+  try {
+    const s = sessionStorage.getItem('quranData');
+    if (s) return JSON.parse(s);
+  } catch(e) {}
+  return {
+    juzzStatus: {
+      29: 'memorized',  // عم
+      28: 'memorized',  // تبارك
+      27: 'in-progress' // قد سمع
+    },
+    sessions: [],
+    streak: 0,
+    lastSessionDate: null
+  };
+}
+
+function saveData() {
+  try { sessionStorage.setItem('quranData', JSON.stringify(DATA)); } catch(e) {}
+}
+
+let DATA = loadData();
+
+// ============ INIT ============
+function init() {
+  checkFriday();
+  renderWeek();
+  renderJuzzGrid();
+  renderJuzzSelect();
+  renderStats();
+  renderHistory();
+}
+
+function checkFriday() {
+  const day = new Date().getDay(); // 5 = Friday
+  if (day === 5) {
+    document.getElementById('fridayBanner').classList.add('show');
+  }
+}
+
+function renderWeek() {
+  const days = ['ح','ن','ث','ر','خ','ج','س'];
+  const dayNames = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const today = new Date();
+  const todayDay = today.getDay();
+
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - todayDay + i);
+    const dateStr = d.toISOString().split('T')[0];
+    const hasSession = DATA.sessions.some(s => s.date === dateStr);
+    const isToday = i === todayDay;
+    const isFriday = i === 5;
+
+    let cls = 'week-day';
+    if (hasSession) cls += ' done';
+    if (isToday) cls += ' today';
+    if (isFriday) cls += ' friday';
+
+    const icon = isFriday ? '🌙' : hasSession ? '✓' : isToday ? '◉' : '·';
+
+    html += `<div class="${cls}">
+      <div class="week-day-name">${days[i]}</div>
+      <div class="week-day-icon">${icon}</div>
+    </div>`;
+  }
+  document.getElementById('weekRow').innerHTML = html;
+}
+
+function renderJuzzGrid() {
+  let html = '';
+  for (let i = 1; i <= 30; i++) {
+    const status = DATA.juzzStatus[i] || 'not-started';
+    const name = JUZZ_NAMES[i-1];
+    html += `<div class="juzz-cell ${status}" title="الجزء ${i}: ${name}" onclick="quickToggleJuzz(${i})">
+      ${i}
+    </div>`;
+  }
+  document.getElementById('juzzGrid').innerHTML = html;
+}
+
+function renderJuzzSelect() {
+  let html = '';
+  for (let i = 1; i <= 30; i++) {
+    html += `<option value="${i}">جزء ${i} — ${JUZZ_NAMES[i-1]}</option>`;
+  }
+  document.getElementById('juzzSelect').innerHTML = html;
+}
+
+function renderStats() {
+  const memorized = Object.values(DATA.juzzStatus).filter(s => s === 'memorized').length;
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  weekStart.setHours(0,0,0,0);
+
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const weekPages = DATA.sessions
+    .filter(s => new Date(s.date) >= weekStart && s.type === 'hifz')
+    .reduce((sum, s) => sum + (s.pages || 0), 0);
+
+  const monthSessions = DATA.sessions
+    .filter(s => new Date(s.date) >= monthStart).length;
+
+  document.getElementById('statJuzz').textContent = toArabicNum(memorized);
+  document.getElementById('statPages').textContent = toArabicNum(weekPages);
+  document.getElementById('statSessions').textContent = toArabicNum(monthSessions);
+
+  const pct = ((memorized / 30) * 100).toFixed(1);
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressText').textContent = memorized + ' من 30 جزء';
+  document.getElementById('progressBar').style.width = pct + '%';
+
+  // Streak
+  document.getElementById('streakNum').textContent = toArabicNum(DATA.streak || 0);
+
+  // Current position
+  const inProgress = Object.entries(DATA.juzzStatus).find(([,v]) => v === 'in-progress');
+  if (inProgress) {
+    const juzzNum = parseInt(inProgress[0]);
+    document.getElementById('currentJuzz').textContent = `الجزء ${juzzNum}: ${JUZZ_NAMES[juzzNum-1]} — جارٍ`;
+  }
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!DATA.sessions.length) {
+    list.innerHTML = '<div class="empty-state">لا توجد جلسات مسجلة بعد</div>';
+    return;
+  }
+
+  const sorted = [...DATA.sessions].reverse().slice(0, 30);
+  list.innerHTML = sorted.map(s => `
+    <div class="day-row">
+      <div class="day-date">${formatDate(s.date)}</div>
+      <div class="day-info">
+        <div class="day-surah">${s.surah}</div>
+        <div class="day-pages">${s.pages} صفحة${s.note ? ' · ' + s.note : ''}</div>
+      </div>
+      <div class="day-badge ${s.type === 'hifz' ? 'badge-hifz' : 'badge-muraja'}">
+        ${s.type === 'hifz' ? 'حفظ' : 'مراجعة'}
+      </div>
+    </div>
+  `).join('');
+}
+
+function logSession() {
+  const type = document.getElementById('sessionType').value;
+  const surah = document.getElementById('sessionSurah').value;
+  const pages = parseFloat(document.getElementById('sessionPages').value) || 1;
+  const note = document.getElementById('sessionNote').value.trim();
+  const today = new Date().toISOString().split('T')[0];
+
+  DATA.sessions.push({ date: today, type, surah, pages, note });
+
+  // Update streak
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yStr = yesterday.toISOString().split('T')[0];
+
+  if (DATA.lastSessionDate === yStr || DATA.lastSessionDate === today) {
+    if (DATA.lastSessionDate !== today) DATA.streak = (DATA.streak || 0) + 1;
+  } else {
+    DATA.streak = 1;
+  }
+  DATA.lastSessionDate = today;
+
+  saveData();
+  renderWeek();
+  renderStats();
+  renderHistory();
+
+  document.getElementById('sessionNote').value = '';
+  document.getElementById('sessionPages').value = '1';
+
+  // Show success
+  const btn = document.querySelector('#tab-log .btn-green');
+  btn.textContent = '✓ تم التسجيل!';
+  btn.style.background = '#2D6B22';
+  setTimeout(() => {
+    btn.textContent = '✓ تسجيل الجلسة';
+    btn.style.background = '';
+  }, 2000);
+
+  switchTab('home');
+}
+
+function updateJuzz() {
+  const juzz = parseInt(document.getElementById('juzzSelect').value);
+  const status = document.getElementById('juzzStatus').value;
+  DATA.juzzStatus[juzz] = status;
+  saveData();
+  renderJuzzGrid();
+  renderStats();
+}
+
+function quickToggleJuzz(num) {
+  const current = DATA.juzzStatus[num] || 'not-started';
+  const next = current === 'not-started' ? 'in-progress' : current === 'in-progress' ? 'memorized' : 'not-started';
+  DATA.juzzStatus[num] = next;
+  saveData();
+  renderJuzzGrid();
+  renderStats();
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['home','log','map','history'][i] === tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+function toArabicNum(n) {
+  return n.toString().replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  const days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  return days[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth()+1);
+}
+
+init();
+</script>
+</body>
+</html>
